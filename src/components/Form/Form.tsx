@@ -1,19 +1,20 @@
 import React, { useReducer } from 'react';
-import { Sub } from '../../types';
-import styles from './Form.module.css'; // Import CSS module
+import { User } from '../../types';
+import styles from './Form.module.css';
+import { addUser } from '../../services/usersService'; // Import CSS module
 
 interface FormState {
-    inputValues: Sub;
+    inputValues: User;
 }
 
 interface FormProps {
-    onNewSub: (newSub: Sub) => void;
+    onNewUser: (newUser: User) => void;
 }
 
 const INITIAL_STATE = {
-    nick: '',
-    edad: 0,
-    correo: ''
+    name: '',
+    age: 0,
+    email: ''
 };
 
 type FormReducerAction = {
@@ -38,17 +39,22 @@ const formReducer = (state: FormState["inputValues"], action: FormReducerAction)
     }
 };
 
-const Form = ({ onNewSub }: FormProps) => {
+const Form = ({ onNewUser: onNewUser }: FormProps) => {
     const [inputValues, dispatch] = useReducer(formReducer, INITIAL_STATE);
 
-    const handleSubmit = (evt: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (evt: React.FormEvent<HTMLFormElement>) => {
         evt.preventDefault();
-        if (!inputValues.nick || !inputValues.edad || !inputValues.correo) {
+        if (!inputValues.name || !inputValues.age || !inputValues.email) {
             alert('Please fill out all fields.');
             return;
         }
-        onNewSub(inputValues);
-        handleClear();
+        try {
+            const addedUser = await addUser(inputValues);
+            onNewUser(addedUser);
+            handleClear();
+        } catch (error) {
+            console.error('Error submitting form:', error);
+        }
     };
 
     const handleChange = (evt: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -71,37 +77,37 @@ const Form = ({ onNewSub }: FormProps) => {
         <div className={styles.formContainer}>
             <form onSubmit={handleSubmit} className={styles.form}>
                 <div className={styles.formGroup}>
-                    <label htmlFor="nick" className={styles.label}>Nick</label>
+                    <label htmlFor="name" className={styles.label}>Name</label>
                     <input
                         onChange={handleChange}
-                        value={inputValues.nick}
+                        value={inputValues.name}
                         type='text'
-                        name="nick"
-                        id="nick"
-                        placeholder="Enter your nickname"
+                        name="name"
+                        id="name"
+                        placeholder="Enter your name"
                         className={styles.input}
                     />
                 </div>
                 <div className={styles.formGroup}>
-                    <label htmlFor="edad" className={styles.label}>Age</label>
+                    <label htmlFor="age" className={styles.label}>Age</label>
                     <input
                         onChange={handleChange}
-                        value={inputValues.edad || ''}
+                        value={inputValues.age || ''}
                         type='number'
-                        name="edad"
-                        id="edad"
+                        name="age"
+                        id="age"
                         placeholder="Enter your age"
                         className={styles.input}
                     />
                 </div>
                 <div className={styles.formGroup}>
-                    <label htmlFor="correo" className={styles.label}>Email</label>
+                    <label htmlFor="email" className={styles.label}>Email</label>
                     <input
                         onChange={handleChange}
-                        value={inputValues.correo}
+                        value={inputValues.email}
                         type='email'
-                        name="correo"
-                        id="correo"
+                        name="email"
+                        id="email"
                         placeholder="Enter your email"
                         className={styles.input}
                     />
