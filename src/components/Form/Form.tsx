@@ -49,7 +49,9 @@ const Form = ({ onNewUser: onNewUser }: FormProps) => {
             return;
         }
         try {
+            console.log(inputValues);
             const addedUser = await addUser(inputValues);
+
             onNewUser(addedUser);
             handleClear();
         } catch (error) {

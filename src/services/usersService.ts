@@ -26,6 +26,20 @@ export const addUser = async (newUser: User): Promise<User> => {
     }
 };
 
+// Log in a user
+export const LogIn = async (email: string, password: string): Promise<User> => {
+    try {
+        const response = await axios.post<User>('http://localhost:9000/api/Users/login', { email, password });
+        if (response.status !== 200) {
+            throw new Error('Failed to log in');
+        }
+        return response.data; // Devuelve los datos del usuario
+    } catch (error) {
+        console.error('Error logging in:', error);
+        throw error;
+    }
+};
+
 /* 
 //PODEM FERHO COM UNA PROMESA
 export const addUser = async (newUser: User): Promise<User> => {
