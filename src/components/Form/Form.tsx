@@ -14,7 +14,10 @@ interface FormProps {
 const INITIAL_STATE = {
     name: '',
     age: 0,
-    email: ''
+    email: '',
+    password: '',
+    phone: 0
+
 };
 
 type FormReducerAction = {
@@ -44,14 +47,13 @@ const Form = ({ onNewUser: onNewUser }: FormProps) => {
 
     const handleSubmit = async (evt: React.FormEvent<HTMLFormElement>) => {
         evt.preventDefault();
-        if (!inputValues.name || !inputValues.age || !inputValues.email) {
-            alert('Please fill out all fields.');
+        if (!inputValues.name || !inputValues.age || !inputValues.email || !inputValues.password) {
+            alert('Please fill out all required fields.');
             return;
         }
         try {
             console.log(inputValues);
             const addedUser = await addUser(inputValues);
-
             onNewUser(addedUser);
             handleClear();
         } catch (error) {
@@ -111,6 +113,18 @@ const Form = ({ onNewUser: onNewUser }: FormProps) => {
                         name="email"
                         id="email"
                         placeholder="Enter your email"
+                        className={styles.input}
+                    />
+                </div>
+                <div className={styles.formGroup}>
+                    <label htmlFor="password" className={styles.label}>Password</label>
+                    <input
+                        onChange={handleChange}
+                        value={inputValues.password}
+                        type='password'
+                        name="password"
+                        id="password"
+                        placeholder="Enter your password"
                         className={styles.input}
                     />
                 </div>

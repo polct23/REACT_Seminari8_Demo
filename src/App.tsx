@@ -3,7 +3,7 @@ import './App.css';
 import { User } from './types';
 import Form from './components/Form/Form';
 import UsersList from './components/UsersList/UsersList';
-import { fetchUsers, LogIn } from './services/usersService'; // Importa LogIn
+import { fetchUsers, LogIn } from './services/usersService';
 import Login from './components/Login';
 
 interface AppState {
@@ -15,8 +15,10 @@ function App() {
     const [users, setUsers] = useState<AppState['users']>([]);
     const [newUsersNumber, setNewUsersNumber] = useState<AppState['newUsersNumber']>(0);
     const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
-    const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false); // Estado para manejar el login
-    const [currentUser, setCurrentUser] = useState<User | null>(null); // Estado para el usuario actual
+    const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+    const [currentUser, setCurrentUser] = useState<User | null>(null);
+    const [showNotification, setShowNotification] = useState<boolean>(false);
+    const [newUserName, setNewUserName] = useState<string>('');
     const divRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -36,6 +38,13 @@ function App() {
 
     const handleNewUser = (newUser: User): void => {
         setNewUsersNumber((n) => n + 1);
+        setNewUserName(newUser.name);
+        setShowNotification(true);
+        
+        // Hide the notification after 3 seconds
+        setTimeout(() => {
+            setShowNotification(false);
+        }, 3000);
     };
 
     const toggleDarkMode = () => {
@@ -48,10 +57,10 @@ function App() {
 
     const handleLogin = async (email: string, password: string) => {
         try {
-            const user = await LogIn(email, password); // Llama a la función LogIn
+            const user = await LogIn(email, password);
             console.log('User logged in:', user);
-            setCurrentUser(user); // Guarda el usuario actual
-            setIsLoggedIn(true); // Cambia el estado a "logueado"
+            setCurrentUser(user);
+            setIsLoggedIn(true);
         } catch (error) {
             console.error('Login failed:', error);
             alert('Login failed. Please check your credentials.');
@@ -60,13 +69,20 @@ function App() {
 
     return (
         <div className="App" ref={divRef}>
+            {/* Notification Popup */}
+            {showNotification && (
+                <div className={`notification ${isDarkMode ? 'dark' : 'light'}`}>
+                    User <strong>{newUserName}</strong> has been created successfully!
+                </div>
+            )}
+
             <button onClick={toggleDarkMode} className="toggleButton">
                 {isDarkMode ? 'Light Mode' : 'Dark Mode'}
             </button>
             <div className="content">
                 {!isLoggedIn ? (
                     <Login
-                        onLogin={({ email, password }) => handleLogin(email, password)} // Pasa la función handleLogin
+                        onLogin={({ email, password }) => handleLogin(email, password)}
                     />
                 ) : (
                     <>
