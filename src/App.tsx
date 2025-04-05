@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 import { User } from './types';
-import Form from './components/Form/Form';
-import UsersList from './components/UsersList/UsersList';
+import Form from './components/Form';
+import UsersList from './components/UsersList';
 import { fetchUsers, LogIn } from './services/usersService';
 import Login from './components/Login';
 
