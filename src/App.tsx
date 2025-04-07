@@ -7,19 +7,31 @@ import { fetchUsers, LogIn } from './services/usersService';
 import Login from './components/Login';
 
 interface AppState {
+    currentUser: User | null;
     users: User[];
     newUsersNumber: number;
+    isLoggedIn: boolean;
+}
+
+interface UIState {
+    isDarkMode: boolean;
+    showNotification: boolean;
+    newUserName: string;
 }
 
 function App() {
     const [users, setUsers] = useState<AppState['users']>([]);
     const [newUsersNumber, setNewUsersNumber] = useState<AppState['newUsersNumber']>(0);
-    const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
-    const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
-    const [currentUser, setCurrentUser] = useState<User | null>(null);
-    const [showNotification, setShowNotification] = useState<boolean>(false);
-    const [newUserName, setNewUserName] = useState<string>('');
-    const divRef = useRef<HTMLDivElement>(null);
+    const [isLoggedIn, setIsLoggedIn] = useState<AppState['isLoggedIn']>(false);
+    const [currentUser, setCurrentUser] = useState<AppState['currentUser']>(null);
+
+    const [uiState, setUiState] = useState<UIState>({
+        isDarkMode: false,
+        showNotification: false,
+        newUserName: '',
+    });
+
+    const divRef = useRef<HTMLDivElement>(null); // Mantenemos el useRef como ejemplo
 
     useEffect(() => {
         const loadUsers = async () => {
@@ -36,23 +48,39 @@ function App() {
         }
     }, [newUsersNumber, isLoggedIn]);
 
+    useEffect(() => {
+        if (uiState.showNotification) {
+            const timer = setTimeout(() => {
+                setUiState((prev) => ({
+                    ...prev,
+                    showNotification: false,
+                }));
+            }, 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [uiState.showNotification]);
+
     const handleNewUser = (newUser: User): void => {
         setNewUsersNumber((n) => n + 1);
-        setNewUserName(newUser.name);
-        setShowNotification(true);
-        
-        // Hide the notification after 3 seconds
-        setTimeout(() => {
-            setShowNotification(false);
-        }, 3000);
+        setUiState((prev) => ({
+            ...prev,
+            newUserName: newUser.name,
+            showNotification: true,
+        }));
     };
 
     const toggleDarkMode = () => {
-        setIsDarkMode(!isDarkMode);
-        if (divRef.current) {
-            divRef.current.style.backgroundColor = isDarkMode ? '#ffffff' : '#333333';
-            divRef.current.style.color = isDarkMode ? '#000000' : '#ffffff';
-        }
+        setUiState((prev) => {
+            const newMode = !prev.isDarkMode;
+
+            // Ejemplo de uso de useRef para cambiar estilos directamente
+            if (divRef.current) {
+                divRef.current.style.backgroundColor = newMode ? '#333333' : '#ffffff';
+                divRef.current.style.color = newMode ? '#ffffff' : '#000000';
+            }
+
+            return { ...prev, isDarkMode: newMode };
+        });
     };
 
     const handleLogin = async (email: string, password: string) => {
@@ -70,15 +98,16 @@ function App() {
     return (
         <div className="App" ref={divRef}>
             {/* Notification Popup */}
-            {showNotification && (
-                <div className={`notification ${isDarkMode ? 'dark' : 'light'}`}>
-                    User <strong>{newUserName}</strong> has been created successfully!
+            {uiState.showNotification && (
+                <div className={`notification ${uiState.isDarkMode ? 'dark' : 'light'}`}>
+                    User <strong>{uiState.newUserName}</strong> has been created successfully!
                 </div>
             )}
 
             <button onClick={toggleDarkMode} className="toggleButton">
-                {isDarkMode ? 'Light Mode' : 'Dark Mode'}
+                {uiState.isDarkMode ? 'Light Mode' : 'Dark Mode'}
             </button>
+
             <div className="content">
                 {!isLoggedIn ? (
                     <Login

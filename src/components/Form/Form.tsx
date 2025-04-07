@@ -1,39 +1,36 @@
 import React, { useReducer } from 'react';
 import { User } from '../../types';
 import styles from './Form.module.css';
-import { addUser } from '../../services/usersService'; // Import CSS module
-
-interface FormState {
-    inputValues: User;
-}
+import { addUser } from '../../services/usersService';
 
 interface FormProps {
     onNewUser: (newUser: User) => void;
 }
 
-const INITIAL_STATE = {
+const INITIAL_STATE: User = {
     name: '',
     age: 0,
     email: '',
     password: '',
     phone: 0
-
 };
 
-type FormReducerAction = {
-    type: "change_value", 
-    payload: { inputName: string, inputValue: string };
-} | {
-    type: "clear";
-};
+type FormReducerAction =
+    | { 
+        type: "change_value"; 
+        payload: { 
+            inputName: keyof User; 
+            inputValue: string | number 
+        } 
+      }
+    | { type: "clear" };
 
-const formReducer = (state: FormState["inputValues"], action: FormReducerAction) => {
+const formReducer = (state: User, action: FormReducerAction): User => {
     switch (action.type) {
         case "change_value":
-            const { inputName, inputValue } = action.payload;
             return {
                 ...state,
-                [inputName]: inputValue
+                [action.payload.inputName]: action.payload.inputValue
             };
         case "clear":
             return INITIAL_STATE;
@@ -42,7 +39,7 @@ const formReducer = (state: FormState["inputValues"], action: FormReducerAction)
     }
 };
 
-const Form = ({ onNewUser: onNewUser }: FormProps) => {
+const Form = ({ onNewUser }: FormProps) => {
     const [inputValues, dispatch] = useReducer(formReducer, INITIAL_STATE);
 
     const handleSubmit = async (evt: React.FormEvent<HTMLFormElement>) => {
@@ -52,28 +49,22 @@ const Form = ({ onNewUser: onNewUser }: FormProps) => {
             return;
         }
         try {
-            console.log(inputValues);
             const addedUser = await addUser(inputValues);
             onNewUser(addedUser);
-            handleClear();
+            dispatch({ type: "clear" });
         } catch (error) {
             console.error('Error submitting form:', error);
         }
     };
 
-    const handleChange = (evt: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const handleChange = (evt: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = evt.target;
         dispatch({
             type: "change_value",
             payload: {
-                inputName: evt.target.name,
-                inputValue: evt.target.value
+                inputName: name as keyof User,
+                inputValue: name === 'age' || name === 'phone' ? Number(value) : value
             }
-        });
-    };
-
-    const handleClear = () => {
-        dispatch({
-            type: "clear"
         });
     };
 
@@ -90,6 +81,7 @@ const Form = ({ onNewUser: onNewUser }: FormProps) => {
                         id="name"
                         placeholder="Enter your name"
                         className={styles.input}
+                        required
                     />
                 </div>
                 <div className={styles.formGroup}>
@@ -102,6 +94,8 @@ const Form = ({ onNewUser: onNewUser }: FormProps) => {
                         id="age"
                         placeholder="Enter your age"
                         className={styles.input}
+                        required
+                        min="0"
                     />
                 </div>
                 <div className={styles.formGroup}>
@@ -114,6 +108,7 @@ const Form = ({ onNewUser: onNewUser }: FormProps) => {
                         id="email"
                         placeholder="Enter your email"
                         className={styles.input}
+                        required
                     />
                 </div>
                 <div className={styles.formGroup}>
@@ -126,10 +121,15 @@ const Form = ({ onNewUser: onNewUser }: FormProps) => {
                         id="password"
                         placeholder="Enter your password"
                         className={styles.input}
+                        required
                     />
                 </div>
                 <div className={styles.buttonGroup}>
-                    <button type="button" onClick={handleClear} className={styles.button}>
+                    <button 
+                        type="button" 
+                        onClick={() => dispatch({ type: "clear" })} 
+                        className={styles.button}
+                    >
                         Clear
                     </button>
                     <button type="submit" className={styles.button}>
