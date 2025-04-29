@@ -5,13 +5,15 @@ import { User } from '../types';
 export const fetchUsers = async (): Promise<User[]> => {
     try {
         const response = await axios.get<User[]>('http://localhost:9000/api/Users');
-        return response.data;
+        return response.data.map(user => ({
+            ...user,
+            id: user._id, // Mapeamos _id a id
+        }));
     } catch (error) {
         console.error('Error fetching users:', error);
         throw error;
     }
 };
-
 // Add a new user
 export const addUser = async (newUser: User): Promise<User> => {
     try {
@@ -36,6 +38,19 @@ export const LogIn = async (email: string, password: string): Promise<User> => {
         return response.data; // Devuelve los datos del usuario
     } catch (error) {
         console.error('Error logging in:', error);
+        throw error;
+    }
+};
+// Update an existing user
+export const updateUser = async (id: string, updatedUser: Partial<User>): Promise<User> => {
+    try {
+        const response = await axios.put<User>(`http://localhost:9000/api/Users/${id}`, updatedUser);
+        if (response.status !== 200) {
+            throw new Error('Failed to update user');
+        }
+        return response.data;
+    } catch (error) {
+        console.error('Error updating user:', error);
         throw error;
     }
 };

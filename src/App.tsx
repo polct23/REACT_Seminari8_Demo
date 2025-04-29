@@ -3,6 +3,7 @@ import './App.css';
 import { User } from './types';
 import Form from './components/Form';
 import UsersList from './components/UsersList';
+import EditUserForm from './components/UpdateUser/EditUserForm';
 import { fetchUsers, LogIn } from './services/usersService';
 import Login from './components/Login';
 
@@ -31,13 +32,17 @@ function App() {
         newUserName: '',
     });
 
+    const [editingUser, setEditingUser] = useState<User | null>(null); // Nuevo estado para el usuario en edición
+
     const divRef = useRef<HTMLDivElement>(null); // Mantenemos el useRef como ejemplo
 
     useEffect(() => {
         const loadUsers = async () => {
             try {
                 const fetchedUsers = await fetchUsers();
-                setUsers(fetchedUsers);
+                console.log('Fetched Users:', fetchedUsers); // Verifica los datos obtenidos
+                setUsers(fetchedUsers); // Aquí se asignan los usuarios al estado
+                console.log('Updated Users State:', fetchedUsers); // Verifica el estado actualizado
             } catch (error) {
                 console.error('Error loading users:', error);
                 setUsers([]);
@@ -95,6 +100,10 @@ function App() {
         }
     };
 
+    const handleEditUser = (user: User) => {
+        setEditingUser(user); // Establece el usuario en edición
+    };
+
     return (
         <div className="App" ref={divRef}>
             {/* Notification Popup */}
@@ -109,19 +118,42 @@ function App() {
             </button>
 
             <div className="content">
-                {!isLoggedIn ? (
-                    <Login
-                        onLogin={({ email, password }) => handleLogin(email, password)}
-                    />
-                ) : (
-                    <>
-                        <h2>Bienvenido, {currentUser?.name}!</h2>
-                        <UsersList users={users} />
-                        <p>New users: {newUsersNumber}</p>
-                        <Form onNewUser={handleNewUser} />
-                    </>
-                )}
-            </div>
+    {!isLoggedIn ? (
+        <Login
+            onLogin={({ email, password }) => handleLogin(email, password)}
+        />
+    ) : editingUser ? ( // Mostrar el formulario de edición si hay un usuario en edición
+        <EditUserForm
+        user={editingUser}
+        onSave={async (updatedUser: User) => {
+            try {
+                // Vuelve a cargar los usuarios desde el backend
+                const updatedUsers = await fetchUsers();
+                setUsers(updatedUsers); // Actualiza el estado con los datos más recientes
+                setEditingUser(null); // Salir del modo de edición
+            } catch (error) {
+                console.error('Error fetching updated users:', error);
+                alert('Failed to refresh user list.');
+            }
+        }}
+        onCancel={() => setEditingUser(null)} // Cancelar edición
+    />
+    ) : (
+        <>
+            <h2>Bienvenido, {currentUser?.name}!</h2>
+            {users.length > 0 ? ( // Renderizar UsersList solo si hay usuarios
+                <UsersList
+                    users={users}
+                    onEditUser={handleEditUser} // Pasar la función de edición
+                />
+            ) : (
+                <p>Cargando usuarios...</p> // Mensaje mientras se cargan los usuarios
+            )}
+            <p>New users: {newUsersNumber}</p>
+            <Form onNewUser={handleNewUser} />
+        </>
+    )}
+</div>
         </div>
     );
 }
